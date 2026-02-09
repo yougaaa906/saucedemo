@@ -6,6 +6,13 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:  # 手动触发
+  
+# 关键：添加权限配置（赋予写入仓库的权限）
+permissions:
+  contents: write  # 允许Action读写仓库内容
+  pages: write     # 允许Action操作GitHub Pages
+  id-token: write  # 可选，部分环境需要
+
 
 # 运行环境
 jobs:
