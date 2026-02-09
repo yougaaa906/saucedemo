@@ -41,6 +41,22 @@ def driver():
     edge_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     edge_options.add_experimental_option("useAutomationExtension", False)
     edge_options.add_argument("--disable-blink-features=AutomationControlled")
+    
+     # 新增：解决Linux/CI/CD环境进程退出的核心参数
+    is_ci = os.getenv("GITHUB_ACTIONS") == "true"
+    if is_ci:
+        edge_options.add_argument('--headless=new')          # 无头模式（必加）
+        edge_options.add_argument('--no-sandbox')            # 关闭沙箱（解决权限问题）
+        edge_options.add_argument('--disable-dev-shm-usage') # 禁用/dev/shm（解决内存不足）
+        edge_options.add_argument('--disable-gpu')           # 禁用GPU（容器无GPU）
+        edge_options.add_argument('--window-size=1920,1080') # 固定窗口大小
+        edge_options.add_argument('--disable-extensions')    # 禁用扩展
+        edge_options.add_argument('--disable-plugins')       # 禁用插件
+        edge_options.add_argument('--disable-software-rasterizer') # 禁用软件光栅化（解决渲染问题）
+        edge_options.add_argument('--single-process')        # 单进程运行（避免多进程退出）
+        # 关键：忽略证书错误（部分环境会因证书问题退出）
+        edge_options.add_argument('--ignore-certificate-errors')
+        edge_options.add_argument('--ignore-ssl-errors')
 
     #初始化浏览器 👇 修改处5：替换Edge驱动启动方式（自动下载匹配版本，不用CHROME_DRIVER_PATH了）
     driver = webdriver.Edge(options=edge_options)
@@ -94,3 +110,4 @@ def clear_cart(driver):
     login_common(driver)
     clearcart(driver)
     yield
+
