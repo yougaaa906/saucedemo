@@ -24,23 +24,20 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
-      # 步骤3：安装Edge浏览器
+# 步骤3：安装Edge浏览器（只装浏览器，驱动由webdriver-manager自动下载）
       - name: 安装Edge浏览器
         run: |
           sudo apt-get update
-          # 添加Edge官方源（确保能安装最新版）
+          # 添加Edge官方源
           curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
           sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
           sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
           rm microsoft.gpg
-          # 安装Edge浏览器
+          # 只安装Edge浏览器，不装驱动！
           sudo apt-get update
           sudo apt-get install -y microsoft-edge-stable
-          # 安装Edge驱动（和浏览器版本匹配）
-          sudo apt-get install -y msedgedriver
-          # 验证安装
+          # 验证浏览器安装成功
           microsoft-edge --version
-          which msedgedriver
 
       # 步骤4：安装Python依赖
       - name: 安装Python依赖包
