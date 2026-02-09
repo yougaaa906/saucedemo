@@ -24,23 +24,24 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
-# 步骤3：安装Edge浏览器（新增系统依赖）
+# 步骤3：安装Edge浏览器及适配Ubuntu 24.04的系统依赖
       - name: 安装Edge浏览器及系统依赖
         run: |
-          # 安装浏览器运行必需的系统依赖
+          # 安装Ubuntu 24.04适配的浏览器运行依赖（替换旧的libasound2）
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libnss3 libatk-bridge2.0-0 libdrm-dev libxkbcommon-dev \
-            libgbm-dev libasound2 libatspi2.0-0 libxshmfence-dev \
+            libgbm-dev libasound2t64 libatspi2.0-0 libxshmfence-dev \
             fonts-liberation libappindicator3-1 xdg-utils
           
-          # 安装Edge浏览器（只装浏览器，驱动靠webdriver-manager）
+          # 安装Edge浏览器（只装浏览器，驱动靠webdriver-manager自动下载）
           curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
           sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
           sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
           rm microsoft.gpg
           sudo apt-get update
           sudo apt-get install -y microsoft-edge-stable
+          # 验证浏览器安装成功
           microsoft-edge --version
 
       # 步骤4：安装Python依赖
