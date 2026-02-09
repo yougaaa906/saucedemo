@@ -1,0 +1,81 @@
+# 工作流名称
+name: saucedemo UI automation test
+
+# 触发条件：push到main分支，或手动触发
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # 手动触发
+
+# 运行环境
+jobs:
+  ui-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 步骤1：拉取代码
+      - name: 拉取仓库代码
+        uses: actions/checkout@v4
+
+      # 步骤2：配置Python 3.9
+      - name: 配置Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      # 步骤3：安装Edge浏览器
+      - name: 安装Edge浏览器
+        run: |
+          sudo apt-get update
+          # 添加Edge官方源（确保能安装最新版）
+          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+          sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
+          sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
+          rm microsoft.gpg
+          # 安装Edge浏览器
+          sudo apt-get update
+          sudo apt-get install -y microsoft-edge-stable
+          # 安装Edge驱动（和浏览器版本匹配）
+          sudo apt-get install -y msedgedriver
+          # 验证安装
+          microsoft-edge --version
+          which msedgedriver
+
+      # 步骤4：安装Python依赖
+      - name: 安装Python依赖包
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+          pip list
+
+      # 步骤5：运行自动化测试
+      - name: 执行自动化测试用例
+        run: |
+          mkdir -p logs screenshots allure-results
+          pytest tests/ -v --alluredir=allure-results
+        continue-on-error: true
+
+      # 步骤6：上传Allure原始数据
+      - name: 上传Allure报告原始数据
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results/
+          retention-days: 7
+
+      # 步骤7：上传测试日志
+      - name: 上传测试日志
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: logs/
+          retention-days: 7
+
+      # 步骤8：上传失败截图
+      - name: 上传失败截图
+        uses: actions/upload-artifact@v4
+        with:
+          name: fail-screenshots
+          path: screenshots/
+          retention-days: 7
