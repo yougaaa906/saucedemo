@@ -81,3 +81,24 @@ jobs:
           name: fail-screenshots
           path: screenshots/
           retention-days: 7
+
+          # 步骤9：安装Allure并生成报告（新增）
+      - name: 安装Allure并生成HTML报告
+        if: always()  # 即使测试失败，也生成报告
+        run: |
+          # 下载并安装Allure
+          wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
+          unzip allure-2.24.1.zip -d /opt/
+          sudo ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure
+          # 生成HTML报告
+          allure generate allure-results --clean -o allure-report
+
+# 步骤10：部署报告到GitHub Pages（新增）
+      - name: 部署Allure报告到GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          publish_branch: gh-pages  # 报告会推到gh-pages分支
+          force_orphan: true
