@@ -3,12 +3,12 @@ import os
 import logging
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options
-from selenium.webdriver.support.ui import WebDriverWait  # 新增：导入WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait
 from datetime import datetime
 from common.login_common import login_common
 
 # --------------------------
-# Configure logging (saucedemo exclusive)
+# Configure logging (global effect for all modules)
 # --------------------------
 def setup_logging():
     # Create saucedemo exclusive log directory
@@ -19,17 +19,35 @@ def setup_logging():
     # Generate log file with timestamp
     log_file = os.path.join(log_dir, f"test_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
     
-    # Configure logger
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.FileHandler(log_file, encoding="utf-8"),
-            logging.StreamHandler()
-        ]
-    )
-    return logging.getLogger(__name__)
+    # Configure ROOT logger (key change: global effect)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # Clear existing handlers to avoid duplicate logs
+    if root_logger.hasHandlers():
+        root_logger.handlers.clear()
+    
+    # Create file handler (write to logs-saucedemo)
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    
+    # Create stream handler (print to console)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.INFO)
+    
+    # Set log format
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+    
+    # Add handlers to root logger
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)
+    
+    # Return root logger for conftest usage
+    return root_logger
 
+# Initialize global logging config
 logger = setup_logging()
 
 # --------------------------
@@ -42,13 +60,13 @@ def driver(request):
     edge_options.add_argument("--headless=new")  # Headless mode for CI
     edge_options.add_argument("--no-sandbox")    # Required for Ubuntu CI
     edge_options.add_argument("--disable-dev-shm-usage")  # Fix resource limit issue
-    edge_options.add_argument("--window-size=1920,1080")  # 补充：适配CI页面布局
-    edge_options.add_argument("--disable-cache")          # 补充：禁用缓存减少渲染问题
+    edge_options.add_argument("--window-size=1920,1080")  # Adapt CI page layout
+    edge_options.add_argument("--disable-cache")          # Disable cache to avoid render issues
     
     # Initialize driver
     driver = webdriver.Edge(options=edge_options)
     driver.implicitly_wait(10)  # Global implicit wait
-    driver.set_page_load_timeout(30)  # 补充：页面加载超时配置
+    driver.set_page_load_timeout(30)  # Page load timeout
     driver.maximize_window()
     
     # Teardown: Take screenshot on failure + quit driver
@@ -79,7 +97,7 @@ def driver(request):
 # --------------------------
 # Login fixture (critical: add @pytest.fixture decorator)
 # --------------------------
-@pytest.fixture(scope="function")  # 新增：夹具装饰器，pytest才能识别
+@pytest.fixture(scope="function")
 def login_fixture(driver):
     """Fixture for saucedemo login, reuse existing login_common function"""
     # Navigate to login page first
