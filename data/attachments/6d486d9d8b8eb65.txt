@@ -1,0 +1,12 @@
+WARNING  selenium.webdriver.common.selenium_manager:selenium_manager.py:135 Exception managing MicrosoftEdge: error sending request for url (https://msedgedriver.azureedge.net/LATEST_RELEASE_144_LINUX): error trying to connect: dns error: failed to lookup address information: Name does not resolve
+INFO     saucedemo.conftest:conftest.py:66 浏览器初始化完成，已打开测试网址：https://www.saucedemo.com/
+INFO     pages.login_page:login_common.py:15 登录成功
+INFO     common.login_common:login_common.py:18 通⽤登录步骤完成
+INFO     common.clearcart:clearcart.py:27 成功进入购物车页面
+INFO     common.clearcart:clearcart.py:34 购物车已为空，无需清空
+INFO     saucedemo.tests.test_full flow:test_full flow.py:16 
+=======完整购买流程======
+INFO     pages.addtocart_page:addtocart_page.py:43 加入购物车操作已完成
+INFO     saucedemo.tests.test_full flow:test_full flow.py:30 加入购物车成功
+INFO     pages.checkout_page:checkout_page.py:44 结算操作成功
+INFO     saucedemo.tests.test_full flow:test_full flow.py:38 订单提交成功
