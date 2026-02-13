@@ -47,11 +47,13 @@ jobs:
 
       - name: Run tests
         run: |
-          # Clean previous data to avoid cross-project pollution
+          # Clean previous test data to avoid cross-run contamination
           rm -rf logs-saucedemo screenshots-saucedemo allure-results-saucedemo
+          # Create necessary directories for test artifacts
           mkdir -p logs-saucedemo screenshots-saucedemo allure-results-saucedemo
-          # Add project root to Python path to resolve module import
+          # Add project root to Python path for module resolution
           export PYTHONPATH=$PYTHONPATH:$(pwd)
+          # Execute tests and generate allure raw results
           pytest tests/ -v --alluredir=allure-results-saucedemo
         continue-on-error: true
 
@@ -76,12 +78,18 @@ jobs:
           path: screenshots-saucedemo/
           retention-days: 7
 
-      - name: Generate Allure report
+      - name: Install Java + Generate Allure report
         if: always()
         run: |
+          # Install Java runtime (required for Allure execution)
+          sudo apt-get install -y openjdk-11-jre
+          # Download and install Allure command line tool
           wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
           unzip allure-2.24.1.zip -d /opt/
           sudo ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure
+          # Verify Allure installation
+          allure --version
+          # Generate Allure HTML report (--clean overwrites existing report)
           allure generate allure-results-saucedemo --clean -o allure-report-saucedemo
 
       - name: Deploy to GitHub Pages
@@ -90,5 +98,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report-saucedemo
-          publish_branch: gh-pages-saucedemo # Unique branch for saucedemo to avoid report conflict
-          force_orphan: false
+          publish_branch: gh-pages-saucedemo # Dedicated branch for saucedemo report to avoid conflicts
+          force_orphan: true # Clear old files and deploy fresh report
+          enable_jekyll: false # Disable Jekyll to prevent HTML parsing issues
