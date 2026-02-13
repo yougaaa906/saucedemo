@@ -1,0 +1,12 @@
+2026-02-13 09:13:52,490 - WARNING - Exception managing MicrosoftEdge: error sending request for url (https://msedgedriver.azureedge.net/LATEST_RELEASE_144_LINUX): error trying to connect: dns error: failed to lookup address information: Name does not resolve
+2026-02-13 09:14:14,071 - INFO - 浏览器初始化完成，已打开测试网址：https://www.saucedemo.com/
+2026-02-13 09:14:14,712 - INFO - 登录成功
+2026-02-13 09:14:14,712 - INFO - 通⽤登录步骤完成
+2026-02-13 09:14:14,786 - INFO - 成功进入购物车页面
+2026-02-13 09:14:30,302 - INFO - 购物车已为空，无需清空
+2026-02-13 09:14:31,004 - INFO - 
+=======完整购买流程======
+2026-02-13 09:14:31,253 - INFO - 加入购物车操作已完成
+2026-02-13 09:14:31,253 - INFO - 加入购物车成功
+2026-02-13 09:14:31,820 - INFO - 结算操作成功
+2026-02-13 09:14:31,820 - INFO - 订单提交成功
