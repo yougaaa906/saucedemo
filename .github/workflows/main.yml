@@ -88,5 +88,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report-saucedemo
-          publish_branch: gh-pages
+          publish_branch: gh-pages-saucedemo # Unique branch for saucedemo to avoid report conflict
           force_orphan: false
