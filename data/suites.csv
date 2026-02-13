@@ -1,2 +1,2 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Fri Feb 13 09:25:59 UTC 2026","Fri Feb 13 09:25:59 UTC 2026","852","tests","test_full flow","","","","test_full_checkout_flow",""
+"passed","Fri Feb 13 09:27:52 UTC 2026","Fri Feb 13 09:27:53 UTC 2026","840","tests","test_full flow","","","","test_full_checkout_flow",""
