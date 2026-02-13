@@ -1,43 +1,35 @@
-# tests/test_full_flow.py（整合所有流程，100%按order执行）
 import pytest
-
-
+import logging
 from pages.addtocart_page import AddToCartPage
 from pages.checkout_page import CheckoutPage
-import logging
-from common.login_common import login_common
-
 
 logger = logging.getLogger(__name__)
 
-# 流程第1步：登录（order=1，最先执行）
+# Full checkout flow (login auto-executed by login_fixture)
 @pytest.mark.normal
-def test_full_checkout_flow(driver):
-    logger.info("\n=======完整购买流程======")
+def test_full_checkout_flow(login_fixture):  # 关键：替换driver为login_fixture
+    # Get driver instance from login fixture (login already completed)
+    driver = login_fixture
+    logger.info("\n=======Full checkout flow======")
 
     try:
-        #登录
-
-
-
-
-        #加购物车
-
-
+        # Step 1: Add item to cart (login is done by fixture)
         add_to_cart_page = AddToCartPage(driver)
         add_to_cart_result = add_to_cart_page.add_to_cart()
         assert add_to_cart_result["original_num"] >= 1
-        logger.info("加入购物车成功")
+        logger.info("Item added to cart successfully")
 
-        # 购买
-
+        # Step 2: Checkout process
         checkout_page = CheckoutPage(driver)
         checkout_result = checkout_page.checkout()
-        assert add_to_cart_result["original_name"] in checkout_result["name"],f"结算商品名称与实际不符,实际为：{add_to_cart_result['original_name']}，结算商品名为：{checkout_result['name']}"
-        assert  add_to_cart_result["original_price"] in checkout_result["price"],"结算商品价格与实际不符,实际为：{add_to_cart_result['original_price']}，结算商品名为：{checkout_result['price']}"
-        logger.info("订单提交成功")
+        
+        # Verify checkout information
+        assert add_to_cart_result["original_name"] in checkout_result["name"], \
+            f"Checkout product name mismatch: actual={add_to_cart_result['original_name']}, checkout={checkout_result['name']}"
+        assert add_to_cart_result["original_price"] in checkout_result["price"], \
+            f"Checkout product price mismatch: actual={add_to_cart_result['original_price']}, checkout={checkout_result['price']}"
+        logger.info("Order submitted successfully")
 
     except Exception as e:
-        logger.error(f"完整购买流程失败：{str(e)},exc_info=True")
+        logger.error(f"Full checkout flow failed: {str(e)}", exc_info=True)
         raise e
-
