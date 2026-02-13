@@ -3,7 +3,9 @@ import os
 import logging
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options
+from selenium.webdriver.support.ui import WebDriverWait  # 新增：导入WebDriverWait
 from datetime import datetime
+from common.login_common import login_common
 
 # --------------------------
 # Configure logging (saucedemo exclusive)
@@ -40,10 +42,13 @@ def driver(request):
     edge_options.add_argument("--headless=new")  # Headless mode for CI
     edge_options.add_argument("--no-sandbox")    # Required for Ubuntu CI
     edge_options.add_argument("--disable-dev-shm-usage")  # Fix resource limit issue
+    edge_options.add_argument("--window-size=1920,1080")  # 补充：适配CI页面布局
+    edge_options.add_argument("--disable-cache")          # 补充：禁用缓存减少渲染问题
     
     # Initialize driver
     driver = webdriver.Edge(options=edge_options)
     driver.implicitly_wait(10)  # Global implicit wait
+    driver.set_page_load_timeout(30)  # 补充：页面加载超时配置
     driver.maximize_window()
     
     # Teardown: Take screenshot on failure + quit driver
@@ -69,6 +74,28 @@ def driver(request):
     
     request.addfinalizer(teardown)
     logger.info("Driver initialized successfully")
+    return driver
+
+# --------------------------
+# Login fixture (critical: add @pytest.fixture decorator)
+# --------------------------
+@pytest.fixture(scope="function")  # 新增：夹具装饰器，pytest才能识别
+def login_fixture(driver):
+    """Fixture for saucedemo login, reuse existing login_common function"""
+    # Navigate to login page first
+    driver.get("https://www.saucedemo.com/")
+    logger.info("Navigated to saucedemo login page")
+    
+    # Call your existing login_common function
+    login_common(driver)  # Use default USERNAME/PASSWORD from config
+    
+    # Verify login success (double insurance for CI)
+    WebDriverWait(driver, 30).until(
+        lambda d: "inventory.html" in d.current_url
+    )
+    logger.info("Login fixture executed successfully")
+    
+    # Return driver to test case
     return driver
 
 # --------------------------
