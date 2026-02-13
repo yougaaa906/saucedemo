@@ -50,6 +50,8 @@ jobs:
           # Clean previous data to avoid cross-project pollution
           rm -rf logs-saucedemo screenshots-saucedemo allure-results-saucedemo
           mkdir -p logs-saucedemo screenshots-saucedemo allure-results-saucedemo
+          # Add project root to Python path to resolve module import
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
           pytest tests/ -v --alluredir=allure-results-saucedemo
         continue-on-error: true
 
