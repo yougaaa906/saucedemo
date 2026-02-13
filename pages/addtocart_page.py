@@ -26,7 +26,7 @@ class AddToCartPage(BasePage):
 
     def add_to_cart(self):
         try:
-            self.wait_elem_visible(self.products_01)
+            self.wait_elem_visible(self.product01_name)
             product_original_name = self.wait_elem_visible(self.product01_name).text.strip()
             product_original_price = self.wait_elem_visible(self.products01_price).text.strip()
             self.elem_click(self.product01_name)
@@ -51,4 +51,5 @@ class AddToCartPage(BasePage):
             self.logger.error(f"加入购物车操作失败，失败原因：{str(e)}")  # 建议用error级别，更易排查
 
             raise e
+
 
