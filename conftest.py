@@ -1,113 +1,91 @@
-import os
-import sys
-import urllib3
-urllib3.Timeout.DEFAULT_TIMEOUT = 10  # 直接给整数，符合要求
-
-
-
-#Log and Screenshot Path Configuration
-project_path = os.path.dirname(os.path.abspath(__file__))
-#Add the project root path to Python's search path
-sys.path.append(project_path)
-
 import pytest
+import os
 import logging
-from datetime import datetime
 from selenium import webdriver
-from config.config import TIMEOUT, TEST_URL  # 👇 修改处3：删掉CHROME_DRIVER_PATH（不用了）
-from common.clearcart import clearcart
-from common.login_common import login_common
+from selenium.webdriver.edge.options import Options
+from datetime import datetime
 
-#定义日志、截图的路径
-LOG_DIR = os.path.join(project_path,"logs")
-SCREENSHOTS_DIR = os.path.join(project_path,"screenshots")
-#检索日志、截图的路径，没有则创建
-for dir_path in [LOG_DIR,SCREENSHOTS_DIR]:
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-#日志配置
-def setup_logger():
-    log_filename = os.path.join(LOG_DIR, f"test_run_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
-    logging.basicConfig(level=logging.INFO,format="%(asctime)s - %(levelname)s - %(message)s",handlers=[logging.FileHandler(log_filename, encoding="utf-8"),logging.StreamHandler()])
+# --------------------------
+# Configure logging (saucedemo exclusive)
+# --------------------------
+def setup_logging():
+    # Create saucedemo exclusive log directory
+    log_dir = "logs-saucedemo"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # Generate log file with timestamp
+    log_file = os.path.join(log_dir, f"test_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    
+    # Configure logger
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_file, encoding="utf-8"),
+            logging.StreamHandler()
+        ]
+    )
     return logging.getLogger(__name__)
 
-logger = setup_logger()
+logger = setup_logging()
 
-@pytest.fixture(scope="module")
-def driver():
-    #浏览器配置 👇 修改处4：把ChromeOptions换成EdgeOptions，参数完全通用！
-    edge_options = webdriver.EdgeOptions()
-    edge_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    edge_options.add_experimental_option("useAutomationExtension", False)
-    edge_options.add_argument("--disable-blink-features=AutomationControlled")
+# --------------------------
+# Pytest fixture for WebDriver (Edge)
+# --------------------------
+@pytest.fixture(scope="function")
+def driver(request):
+    # Configure Edge options
+    edge_options = Options()
+    edge_options.add_argument("--headless=new")  # Headless mode for CI
+    edge_options.add_argument("--no-sandbox")    # Required for Ubuntu CI
+    edge_options.add_argument("--disable-dev-shm-usage")  # Fix resource limit issue
     
-     # 新增：解决Linux/CI/CD环境进程退出的核心参数
-    is_ci = os.getenv("GITHUB_ACTIONS") == "true"
-    if is_ci:
-        edge_options.add_argument('--headless=new')          # 无头模式（必加）
-        edge_options.add_argument('--no-sandbox')            # 关闭沙箱（解决权限问题）
-        edge_options.add_argument('--disable-dev-shm-usage') # 禁用/dev/shm（解决内存不足）
-        edge_options.add_argument('--disable-gpu')           # 禁用GPU（容器无GPU）
-        edge_options.add_argument('--window-size=1920,1080') # 固定窗口大小
-        edge_options.add_argument('--disable-extensions')    # 禁用扩展
-        edge_options.add_argument('--disable-plugins')       # 禁用插件
-        edge_options.add_argument('--disable-software-rasterizer') # 禁用软件光栅化（解决渲染问题）
-        edge_options.add_argument('--single-process')        # 单进程运行（避免多进程退出）
-        # 关键：忽略证书错误（部分环境会因证书问题退出）
-        edge_options.add_argument('--ignore-certificate-errors')
-        edge_options.add_argument('--ignore-ssl-errors')
-
-    #初始化浏览器 👇 修改处5：替换Edge驱动启动方式（自动下载匹配版本，不用CHROME_DRIVER_PATH了）
+    # Initialize driver
     driver = webdriver.Edge(options=edge_options)
+    driver.implicitly_wait(10)  # Global implicit wait
     driver.maximize_window()
-    driver.get(TEST_URL)
-    driver.implicitly_wait(TIMEOUT)
-    logger.info(f"浏览器初始化完成，已打开测试网址：{TEST_URL}")
-
-    #返回浏览器驱动，以便后续用例使用
-    yield driver
-
-    #后置操作
-    #driver.quit()
-    #print("√ 所有用例执行完毕")
-
-# ========== 3. 失败自动截图夹具（新增，自动生效） ==========
-@pytest.fixture(scope="function", autouse=True)
-def fail_screenshot(driver, request):
-    """
-    用例失败自动截图：
-    - scope="function"：每个用例执行后检查
-    - autouse=True：自动生效，无需手动调用
-    """
-    yield  # 执行用例
-
-    # 检查用例是否失败
-    if request.node.rep_call.failed:
-        # 生成截图文件名（用例名+时间戳，避免重复）
-        case_name = request.node.name
-        screenshot_name = f"{case_name}_fail_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-        screenshot_path = os.path.join(SCREENSHOTS_DIR, screenshot_name)
-
-        # 保存截图并记录日志
-        try:
+    
+    # Teardown: Take screenshot on failure + quit driver
+    def teardown():
+        # Capture screenshot if test failed
+        if request.node.rep_call.failed:
+            # Create saucedemo exclusive screenshot directory
+            screenshot_dir = "screenshots-saucedemo"
+            if not os.path.exists(screenshot_dir):
+                os.makedirs(screenshot_dir)
+            
+            # Generate screenshot filename with test name + timestamp
+            screenshot_name = f"{request.node.name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            screenshot_path = os.path.join(screenshot_dir, screenshot_name)
+            
+            # Save screenshot
             driver.save_screenshot(screenshot_path)
-            logger.error(f"用例【{case_name}】执行失败，截图已保存至：{screenshot_path}")
-        except Exception as e:
-            logger.error(f"用例【{case_name}】失败截图保存失败！错误原因：{str(e)}")
+            logger.error(f"Test failed! Screenshot saved to: {screenshot_path}")
+        
+        # Quit driver
+        driver.quit()
+        logger.info("Driver closed successfully")
+    
+    request.addfinalizer(teardown)
+    logger.info("Driver initialized successfully")
+    return driver
 
-# ========== 4. 修复pytest用例结果获取（新增，必须加） ==========
+# --------------------------
+# Pytest hook to capture test result
+# --------------------------
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """获取用例执行结果，给fail_screenshot提供判断依据"""
+    # Execute all other hooks to get the report object
     outcome = yield
     rep = outcome.get_result()
-    # 给用例对象添加结果属性（rep_call：执行阶段结果）
-    setattr(item, f"rep_{rep.when}", rep)
-
-@pytest.fixture(scope="function", autouse=True)
-def clear_cart(driver):
-    login_common(driver)
-    clearcart(driver)
-    yield
-
+    
+    # Store test result in node object (used in teardown)
+    setattr(item, "rep_" + rep.when, rep)
+    
+    # Log test result
+    if rep.when == "call":
+        if rep.failed:
+            logger.error(f"Test {item.name} failed")
+        else:
+            logger.info(f"Test {item.name} passed")
