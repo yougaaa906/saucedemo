@@ -7,7 +7,7 @@ from pages.base_page import BasePage
 class AddToCartPage(BasePage):
     logger = logging.getLogger(__name__)
     # 商品卡片
-    products_01 = (By.XPATH, '//div[@data-test="inventory-item"]/div[1]')
+    products_01 = (By.XPATH, '//div[@data-test="inventory-list"]/div[@data-test="inventory-item"][1]')
     # 第一个商品名称（正确）
     product01_name = (By.XPATH,
                       '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_name")]')
@@ -51,3 +51,4 @@ class AddToCartPage(BasePage):
             self.logger.error(f"加入购物车操作失败，失败原因：{str(e)}")  # 建议用error级别，更易排查
 
             raise e
+
