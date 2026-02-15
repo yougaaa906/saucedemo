@@ -153,23 +153,26 @@ jobs:
         if: always()
         timeout-minutes: 5
         run: |
-          # Install OpenJDK 11 (minimum requirement for Allure 2.24.1)
+          # Install OpenJDK 11 (minimum requirement for Allure 2.24.1 compatibility)
           sudo apt-get install -y openjdk-11-jre
-          
-          # Download Allure only if not in cache
+
+          # Download Allure binary only if not present in cache (optimize build time)
           if [ ! -f "allure-2.24.1.zip" ]; then
             wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
           fi
-          
-          # Install Allure only if not in cache
+
+          # Extract Allure to system directory if not already installed
           if [ ! -d "/opt/allure-2.24.1" ]; then
             unzip allure-2.24.1.zip -d /opt/
-            sudo ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure
           fi
-          
-          # Verify Allure installation
+
+          # Force create symlink to ensure allure command is in system PATH (fix "command not found" error)
+          sudo ln -sf /opt/allure-2.24.1/bin/allure /usr/local/bin/allure
+
+          # Verify Allure installation and version compatibility
           allure --version
-          # Generate Allure HTML report (clean option overwrites existing report)
+          
+          # Generate Allure HTML report (clean option overwrites existing report to avoid conflicts)
           allure generate allure-results-saucedemo --clean -o allure-report-saucedemo
 
       # Step 12: Deploy Allure report to GitHub Pages (dedicated branch)
