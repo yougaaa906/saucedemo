@@ -1,10 +1,25 @@
+# UI automation test workflow for saucedemo project
 name: saucedemo UI automation test
 
+# Trigger conditions: run on push to main branch (only test-related files) or manual dispatch
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'tests/**'
+      - 'common/**'
+      - 'pages/**'
+      - 'config/**'
+      - 'requirements.txt'
+      - '.github/workflows/main.yml'
   workflow_dispatch:
 
+# Concurrency control: prevent multiple workflow runs from conflicting
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Required permissions for GitHub Pages deployment and artifact management
 permissions:
   contents: write
   pages: write
@@ -12,51 +27,95 @@ permissions:
 
 jobs:
   ui-test:
+    # Run on latest Ubuntu LTS
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout repository code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Setup Python 3.9 environment with pip cache
       - name: Setup Python 3.9
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
           cache: 'pip'
 
+      # Step 3: Cache Edge browser to avoid reinstallation
+      - name: Cache Edge browser
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/bin/microsoft-edge
+            /opt/microsoft/edge
+          key: ${{ runner.os }}-microsoft-edge
+
+      # Step 4: Install Edge browser and required dependencies
       - name: Install Edge browser and dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libnss3 libatk-bridge2.0-0 libdrm-dev libxkbcommon-dev \
-            libgbm-dev libasound2t64 libatspi2.0-0 libxshmfence-dev \
-            fonts-liberation libappindicator3-1 xdg-utils
+          # Install Edge only if not present in cache
+          if ! command -v microsoft-edge &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends \
+              libnss3 libatk-bridge2.0-0 libdrm-dev libxkbcommon-dev \
+              libgbm-dev libasound2t64 libatspi2.0-0 libxshmfence-dev \
+              fonts-liberation libappindicator3-1 xdg-utils
 
-          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-          sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
-          sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
-          rm microsoft.gpg
-          sudo apt-get update
-          sudo apt-get install -y microsoft-edge-stable
+            # Add Microsoft Edge repository
+            curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+            sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
+            sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
+            rm microsoft.gpg
+            sudo apt-get update
+            sudo apt-get install -y microsoft-edge-stable
+          fi
+          # Verify Edge installation
           microsoft-edge --version
 
+      # Step 5: Install Python dependencies with Tsinghua mirror for speed
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+      # Step 6: Execute UI automation tests with timeout control
       - name: Run tests
+        id: run_tests
+        timeout-minutes: 10
         run: |
-          # Clean previous test data to avoid cross-run contamination
+          # Clean up previous test artifacts to avoid contamination
           rm -rf logs-saucedemo screenshots-saucedemo allure-results-saucedemo
-          # Create necessary directories for test artifacts
+          # Create directories for test artifacts
           mkdir -p logs-saucedemo screenshots-saucedemo allure-results-saucedemo
+          
+          # Generate Allure environment properties for debugging
+          cat > allure-results-saucedemo/environment.properties << EOF
+          os=${{ runner.os }}
+          python_version=$(python --version | awk '{print $2}')
+          edge_version=$(microsoft-edge --version | awk '{print $3}')
+          github_run_id=${{ github.run_id }}
+          github_branch=${{ github.ref_name }}
+          EOF
+          
           # Add project root to Python path for module resolution
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          # Execute tests and generate allure raw results
+          # Execute pytest and generate Allure results
           pytest tests/ -v --alluredir=allure-results-saucedemo
+          # Capture test exit code for later reference
+          TEST_EXIT_CODE=$?
+          
+          # Print debug information for troubleshooting
+          echo "=== Python Dependencies Version ==="
+          pip list
+          echo "=== Edge Browser Version ==="
+          microsoft-edge --version
+          echo "=== Pytest Exit Code ==="
+          echo $TEST_EXIT_CODE
+          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
         continue-on-error: true
 
+      # Step 7: Upload Allure raw results as artifact (7 days retention)
       - name: Upload Allure results
         uses: actions/upload-artifact@v4
         with:
@@ -64,6 +123,7 @@ jobs:
           path: allure-results-saucedemo/
           retention-days: 7
 
+      # Step 8: Upload test logs for debugging
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
@@ -71,6 +131,7 @@ jobs:
           path: logs-saucedemo/
           retention-days: 7
 
+      # Step 9: Upload test screenshots for failure analysis
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
         with:
@@ -78,26 +139,54 @@ jobs:
           path: screenshots-saucedemo/
           retention-days: 7
 
+      # Step 10: Cache Allure CLI to avoid repeated downloads
+      - name: Cache Allure binary
+        uses: actions/cache@v3
+        with:
+          path: |
+            /opt/allure-2.24.1
+            allure-2.24.1.zip
+          key: ${{ runner.os }}-allure-2.24.1
+
+      # Step 11: Install Java (required for Allure) and generate HTML report
       - name: Install Java + Generate Allure report
         if: always()
+        timeout-minutes: 5
         run: |
-          # Install Java runtime (required for Allure execution)
+          # Install OpenJDK 11 (minimum requirement for Allure 2.24.1)
           sudo apt-get install -y openjdk-11-jre
-          # Download and install Allure command line tool
-          wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
-          unzip allure-2.24.1.zip -d /opt/
-          sudo ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure
+          
+          # Download Allure only if not in cache
+          if [ ! -f "allure-2.24.1.zip" ]; then
+            wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
+          fi
+          
+          # Install Allure only if not in cache
+          if [ ! -d "/opt/allure-2.24.1" ]; then
+            unzip allure-2.24.1.zip -d /opt/
+            sudo ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure
+          fi
+          
           # Verify Allure installation
           allure --version
-          # Generate Allure HTML report (--clean overwrites existing report)
+          # Generate Allure HTML report (clean option overwrites existing report)
           allure generate allure-results-saucedemo --clean -o allure-report-saucedemo
 
+      # Step 12: Deploy Allure report to GitHub Pages (dedicated branch)
       - name: Deploy to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report-saucedemo
-          publish_branch: gh-pages-saucedemo # Dedicated branch for saucedemo report to avoid conflicts
-          force_orphan: true # Clear old files and deploy fresh report
+          publish_branch: gh-pages-saucedemo # Isolated branch for saucedemo report
+          force_orphan: true # Clear old files before deployment
           enable_jekyll: false # Disable Jekyll to prevent HTML parsing issues
+
+      # Step 13: Print report URL for quick access
+      - name: Print report URL
+        if: always()
+        run: |
+          echo "=== Allure Report Access URL ==="
+          echo "https://${{ github.actor }}.github.io/${{ github.repository }}/"
+          echo "Note: Verify GitHub Pages source branch (gh-pages-saucedemo) in repository settings"
