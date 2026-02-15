@@ -1,0 +1,13 @@
+WARNING  selenium.webdriver.common.selenium_manager:selenium_manager.py:135 Exception managing MicrosoftEdge: error sending request for url (https://msedgedriver.azureedge.net/LATEST_RELEASE_144_LINUX): error trying to connect: dns error: failed to lookup address information: Name does not resolve
+INFO     root:conftest.py:94 Driver initialized successfully
+INFO     root:conftest.py:105 Navigated to saucedemo login page
+INFO     pages.login_page:login_common.py:34 Login successful with username: standard_user
+INFO     common.login_common:login_common.py:35 Universal login flow completed successfully
+INFO     root:conftest.py:114 Login fixture executed successfully
+INFO     saucedemo.tests.test_full flow:test_full flow.py:24 
+======= Starting End-to-End Checkout Flow Test ======
+INFO     pages.addtocart_page:addtocart_page.py:73 Add to cart operation completed successfully
+INFO     saucedemo.tests.test_full flow:test_full flow.py:34 Product added to cart successfully | Name: Sauce Labs Backpack | Price: $29.99
+INFO     pages.checkout_page:checkout_page.py:87 Checkout flow completed successfully with postal code: 3
+INFO     saucedemo.tests.test_full flow:test_full flow.py:48 End-to-End Checkout Flow Test Completed Successfully
+INFO     root:conftest.py:91 Driver closed successfully

@@ -1,0 +1,14 @@
+2026-02-15 09:08:04,590 - WARNING - Exception managing MicrosoftEdge: error sending request for url (https://msedgedriver.azureedge.net/LATEST_RELEASE_144_LINUX): error trying to connect: dns error: failed to lookup address information: Name does not resolve
+2026-02-15 09:08:20,527 - INFO - Driver initialized successfully
+2026-02-15 09:08:21,655 - INFO - Navigated to saucedemo login page
+2026-02-15 09:08:22,204 - INFO - Login successful with username: standard_user
+2026-02-15 09:08:22,204 - INFO - Universal login flow completed successfully
+2026-02-15 09:08:22,210 - INFO - Login fixture executed successfully
+2026-02-15 09:08:22,212 - INFO - 
+======= Starting End-to-End Checkout Flow Test ======
+2026-02-15 09:08:22,495 - INFO - Add to cart operation completed successfully
+2026-02-15 09:08:22,496 - INFO - Product added to cart successfully | Name: Sauce Labs Backpack | Price: $29.99
+2026-02-15 09:08:23,127 - INFO - Checkout flow completed successfully with postal code: 3
+2026-02-15 09:08:23,127 - INFO - End-to-End Checkout Flow Test Completed Successfully
+2026-02-15 09:08:23,128 - INFO - Test test_end_to_end_checkout_flow passed
+2026-02-15 09:08:23,192 - INFO - Driver closed successfully
