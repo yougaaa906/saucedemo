@@ -11,7 +11,7 @@ Core Technologies
 •	CI/CD Integration: GitHub Actions
 •	Design Pattern: Page Object Model (POM)
 Key Dependencies
-See requirements.txt for the full精简 dependency list (no redundant packages):
+See requirements.txt for the full dependency list (no redundant packages):
 txt
 pytest==7.4.0
 allure-pytest==2.9.45
