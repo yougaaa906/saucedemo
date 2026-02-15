@@ -1,55 +1,88 @@
 import logging
-
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 
-
+# Page Object for Add to Cart functionality (follows POM design pattern)
 class AddToCartPage(BasePage):
+    # Initialize logger for AddToCartPage class
     logger = logging.getLogger(__name__)
-    # 商品卡片
+
+    # ------------------------------
+    # Element Locators (encapsulated for maintainability)
+    # ------------------------------
+    # Product card (first item in inventory list)
     products_01 = (By.XPATH, '//div[@data-test="inventory-list"]/div[@data-test="inventory-item"][1]')
-    # 第一个商品名称（正确）
+    
+    # First product name (primary identifier)
     product01_name = (By.XPATH,
                       '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_name")]')
-    # 修正1：By.CLASS_NAME → By.XPATH（因为值是XPATH表达式）
+    
+    # First product price (corrected: By.CLASS_NAME → By.XPATH for valid locator type)
     products01_price = (By.XPATH,
                         '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_price")]')
 
-    # 修正2：data-time → data-test（属性名写错）
+    # Product name in detail view (corrected: data-time → data-test attribute typo)
     product_detail_name = (
-    By.XPATH, '//div[contains(@class,"inventory_details_name") and @data-test="inventory-item-name"]')
+        By.XPATH, '//div[contains(@class,"inventory_details_name") and @data-test="inventory-item-name"]')
 
-    # 修正3：By.ID → By.XPATH（add-to-cart是data-test属性，不是id）
+    # Add to cart button (corrected: By.ID → By.XPATH for data-test attribute)
     product_add_cart = (By.XPATH, '//button[@data-test="add-to-cart"]')
-    # 购物车数量
+    
+    # Shopping cart item count badge (only visible when cart has items)
     cart_count = (By.CLASS_NAME, 'shopping_cart_badge')
 
+    # ------------------------------
+    # Core Add to Cart Action (encapsulated)
+    # ------------------------------
     def add_to_cart(self):
+        """
+        Execute complete add-to-cart flow for the first inventory item:
+        1. Validates product list is loaded
+        2. Captures original product name/price from inventory list
+        3. Navigates to product detail page
+        4. Clicks add-to-cart button
+        5. Calculates updated cart count (handles empty cart edge case)
+        6. Returns product info + updated cart count for validation
+        
+        :return: Dictionary with product name, price, and updated cart count
+        :raises Exception: Propagates errors for test case failure handling
+        """
         try:
+            # Wait for product list to load and capture original product name
             self.wait_elem_visible(self.product01_name)
             product_original_name = self.wait_elem_visible(self.product01_name).text.strip()
+            
+            # Capture original product price from inventory list
             product_original_price = self.wait_elem_visible(self.products01_price).text.strip()
+            
+            # Navigate to product detail page (click product name)
             self.elem_click(self.product01_name)
 
+            # Wait for detail page to load and click add-to-cart button
             self.wait_elem_visible(self.product_detail_name)
             self.elem_click(self.product_add_cart)
 
-            # 修正4：加容错处理（购物车为空时没有badge，默认0）
+            # Handle edge case: cart count badge missing (empty cart)
             try:
                 product_original_num = int(self.wait_elem_visible(self.cart_count).text.strip())
-            except:
-                product_original_num = 0  # 加购前为空，加购后会变成1
+            except Exception:
+                # Cart was empty before add-to-cart (default count = 0)
+                product_original_num = 0  
 
-            self.logger.info("加入购物车操作已完成")
+            # Log successful add-to-cart operation
+            self.logger.info("Add to cart operation completed successfully")
+            
+            # Compile product info (updated cart count = original + 1)
             product_original_info = {
                 "original_name": product_original_name,
                 "original_price": product_original_price,
-                "original_num": product_original_num + 1  # 加购后数量+1
+                "original_num": product_original_num + 1  # Increment count post-add
             }
+            
+            # Return product info for validation in test cases
             return product_original_info
+        
         except Exception as e:
-            self.logger.error(f"加入购物车操作失败，失败原因：{str(e)}")  # 建议用error级别，更易排查
-
-            raise e
-
-
+            # Log detailed failure with context (error level for troubleshooting)
+            self.logger.error(f"Add to cart operation failed. Error: {str(e)}")
+            raise e 
