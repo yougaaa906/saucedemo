@@ -96,4 +96,3 @@ Future Enhancements
 •	Add database integration for validating order data post-checkout.
 •	Implement cross-browser testing (Chrome, Firefox) via GitHub Actions matrix.
 •	Add Slack/email notifications for test result alerts.
-|（注：文档部分内容可能由 AI 生成)
