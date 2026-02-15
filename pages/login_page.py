@@ -1,40 +1,62 @@
-
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
-from config.config import USERNAME,PASSWORD
+from config.config import USERNAME, PASSWORD
 import logging
 
-
-
-#如果想让登录调用，则抽离登录，只在其中写登录方法，因此单独写一个脚本，此登录脚本作为单独的用例执行，不可被调用
+# Page Object for Login Page (follows POM design pattern)
+# Note: This class is designed as a standalone test case executor - NOT for import/call by other modules
 class LoginPage(BasePage):
+    # Initialize logger for LoginPage class
     logger = logging.getLogger(__name__)
-    #封装登录操作中的所有元素定位
-    #用户名
+
+    # ------------------------------
+    # Element Locators (encapsulated for maintainability)
+    # ------------------------------
+    # Username input field
     account_input = (By.ID, "user-name")
-    #密码
-    pwd_input =(By.ID, 'password')
-    #登录按钮
+    # Password input field
+    pwd_input = (By.ID, 'password')
+    # Login submission button
     login_btn = (By.ID, 'login-button')
-    #登陆后的主页元素
+    # Homepage logo element (validation for successful login)
     homepage_title = (By.CLASS_NAME, 'app_logo')
 
-
-    #封装登录操作
-    def login(self,username=USERNAME,password=PASSWORD):
+    # ------------------------------
+    # Core Login Action (encapsulated)
+    # ------------------------------
+    def login(self, username=USERNAME, password=PASSWORD):
+        """
+        Execute complete login flow with validation:
+        - Inputs credentials (uses config defaults unless overridden)
+        - Submits login form
+        - Validates successful navigation to homepage
+        - Returns homepage logo text for verification
+        
+        :param username: Optional - custom username (defaults to config.USERNAME)
+        :param password: Optional - custom password (defaults to config.PASSWORD)
+        :return: Stripped text of homepage logo element (for assertion)
+        :raises Exception: Propagates errors for test case failure handling
+        """
         try:
-            self.elem_input(self.account_input,username)
-            self.elem_input(self.pwd_input,password)
+            # Step 1: Enter username into input field
+            self.elem_input(self.account_input, username)
+            
+            # Step 2: Enter password into input field
+            self.elem_input(self.pwd_input, password)
+            
+            # Step 3: Click login button to submit credentials
             self.elem_click(self.login_btn)
-            login_success = self.wait_elem_visible(self.homepage_title)
-            self.logger.info(f"登录成功")
-            return login_success.text.strip()
+            
+            # Step 4: Wait for homepage element to confirm login success (critical validation)
+            login_success_elem = self.wait_elem_visible(self.homepage_title)
+            
+            # Log successful login with username context
+            self.logger.info(f"Login successful for username: {username}")
+            
+            # Return stripped text for test case assertions
+            return login_success_elem.text.strip()
+        
         except Exception as e:
-            self.logger.info(f"登录失败，失败原因是：{str(e)}")
-            raise e
-
-
-
-
-
-
+            # Log failure with detailed context (error level for troubleshooting)
+            self.logger.error(f"Login failed for username: {username}. Error: {str(e)}")
+            raise e  # Re-raise to notify test case of failure
