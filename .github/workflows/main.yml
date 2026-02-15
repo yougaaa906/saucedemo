@@ -113,7 +113,7 @@ jobs:
           echo "=== Pytest Exit Code ==="
           echo $TEST_EXIT_CODE
           echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
-        continue-on-error: true
+      
 
       # Step 7: Upload Allure raw results as artifact (7 days retention)
       - name: Upload Allure results
