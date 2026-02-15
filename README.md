@@ -44,7 +44,7 @@ ui-automation-saucedemo/
 ├── tests/                    # Test Cases (E2E flows)
 │   └── test_checkout_flow.py # End-to-end checkout flow test
 ├── screenshots/              # Auto-generated screenshots (on test failure)
-├── requirements.txt          # 精简Dependencies
+├── requirements.txt          # Dependencies
 ├── pytest.ini                # Pytest configuration
 └── README.md                 # Project documentation (you're here)
 Key Module Explanations
@@ -79,7 +79,7 @@ Framework Highlights (Best Practices)
 •	Test Isolation: Reusable fixtures (e.g., login fixture) and cart-clearing logic ensure tests are independent and reliable.
 •	Robust Error Handling: Timeout control, failure screenshots, and detailed logging (with context) for easy debugging.
 •	CI/CD Integration: Automated test execution and report deployment via GitHub Actions, enabling DevOps collaboration.
-•	精简 Dependencies: No redundant packages, ensuring fast installation and reduced conflicts.
+•     Dependencies: No redundant packages, ensuring fast installation and reduced conflicts.
 •	Configurable & Scalable: Global constants and modular design make it easy to extend to new test scenarios or environments.
 Test Reporting
 Two types of reports are generated for comprehensive test visibility:
