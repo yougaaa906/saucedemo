@@ -1,5 +1,4 @@
 import logging
-from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 
 # Page Object for Add to Cart functionality (follows POM design pattern)
@@ -11,25 +10,22 @@ class AddToCartPage(BasePage):
     # Element Locators (encapsulated for maintainability)
     # ------------------------------
     # Product card (first item in inventory list)
-    products_01 = (By.XPATH, '//div[@data-test="inventory-list"]/div[@data-test="inventory-item"][1]')
+    products_01 = '//div[@data-test="inventory-list"]/div[@data-test="inventory-item"][1]'
     
     # First product name (primary identifier)
-    product01_name = (By.XPATH,
-                      '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_name")]')
+    product01_name = '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_name")]'
     
     # First product price (corrected: By.CLASS_NAME → By.XPATH for valid locator type)
-    products01_price = (By.XPATH,
-                        '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_price")]')
+    products01_price = '//div[@class="inventory_list"]/div[@class="inventory_item"][1]//div[contains(@class,"inventory_item_price")]'
 
     # Product name in detail view (corrected: data-time → data-test attribute typo)
-    product_detail_name = (
-        By.XPATH, '//div[contains(@class,"inventory_details_name") and @data-test="inventory-item-name"]')
+    product_detail_name = '//div[contains(@class,"inventory_details_name") and @data-test="inventory-item-name"]'
 
     # Add to cart button (corrected: By.ID → By.XPATH for data-test attribute)
-    product_add_cart = (By.XPATH, '//button[@data-test="add-to-cart"]')
+    product_add_cart = '//button[@data-test="add-to-cart"]'
     
     # Shopping cart item count badge (only visible when cart has items)
-    cart_count = (By.CLASS_NAME, 'shopping_cart_badge')
+    cart_count = '.shopping_cart_badge'
 
     # ------------------------------
     # Core Add to Cart Action (encapsulated)
@@ -50,10 +46,10 @@ class AddToCartPage(BasePage):
         try:
             # Wait for product list to load and capture original product name
             self.wait_elem_visible(self.product01_name)
-            product_original_name = self.wait_elem_visible(self.product01_name).text.strip()
+            product_original_name = self.page.text_content(self.product01_name).strip()
             
             # Capture original product price from inventory list
-            product_original_price = self.wait_elem_visible(self.products01_price).text.strip()
+            product_original_price = self.page.text_content(self.products01_price).strip()
             
             # Navigate to product detail page (click product name)
             self.elem_click(self.product01_name)
@@ -64,7 +60,7 @@ class AddToCartPage(BasePage):
 
             # Handle edge case: cart count badge missing (empty cart)
             try:
-                product_original_num = int(self.wait_elem_visible(self.cart_count).text.strip())
+                product_original_num = int(self.page.text_content(self.cart_count).strip())
             except Exception:
                 # Cart was empty before add-to-cart (default count = 0)
                 product_original_num = 0  
