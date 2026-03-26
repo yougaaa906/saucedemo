@@ -1,4 +1,3 @@
-from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 from config.config import FIRSTNAME, LASTNAME, POSTALCODE
 import logging
@@ -13,26 +12,26 @@ class CheckoutPage(BasePage):
     # Element Locators (encapsulated for maintainability)
     # ------------------------------
     # Shopping cart link (navigates to cart page)
-    shopping_cart_btn = (By.CLASS_NAME, 'shopping_cart_link')
+    shopping_cart_btn = '.shopping_cart_link'
     
     # Cart page - product name/price elements (validation)
-    product_cart_name = (By.CLASS_NAME, 'inventory_item_name')
-    product_cart_price = (By.CLASS_NAME, "inventory_item_price")
+    product_cart_name = '.inventory_item_name'
+    product_cart_price = ".inventory_item_price"
 
     # Cart page - checkout button (initiates checkout flow)
-    checkout_btn = (By.ID, "checkout")
+    checkout_btn = "#checkout"
     
     # Checkout info page - personal info fields
-    first_name_field = (By.ID, 'first-name')
-    last_name_field = (By.ID, "last-name")
-    postal_code_field = (By.ID, "postal-code")
+    first_name_field = '#first-name'
+    last_name_field = "#last-name"
+    postal_code_field = "#postal-code"
     
     # Checkout info page - continue button (submits personal info)
-    continue_btn = (By.ID, "continue")
+    continue_btn = "#continue"
 
     # Order review page - product name/price elements (final validation)
-    product_order_name = (By.CLASS_NAME, "inventory_item_name")
-    product_order_price = (By.CLASS_NAME, "inventory_item_price")
+    product_order_name = ".inventory_item_name"
+    product_order_price = ".inventory_item_price"
 
     # ------------------------------
     # Core Checkout Action (encapsulated)
@@ -74,8 +73,10 @@ class CheckoutPage(BasePage):
             self.elem_click(self.continue_btn)
             
             # Step 6: Capture final product info for validation
-            product_final_name = self.wait_elem_visible(self.product_order_name).text.strip()  # Fixed typo: product_cart_name → product_order_name
-            product_final_price = self.wait_elem_visible(self.product_order_price).text.strip()  # Fixed typo: fianl → final
+            self.wait_elem_visible(self.product_order_name)
+            product_final_name = self.page.text_content(self.product_order_name).strip()  # Fixed typo: product_cart_name → product_order_name
+            self.wait_elem_visible(self.product_order_price)
+            product_final_price = self.page.text_content(self.product_order_price).strip()  # Fixed typo: fianl → final
             
             # Compile product info for test case assertions
             product_info = {
