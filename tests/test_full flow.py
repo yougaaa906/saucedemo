@@ -25,7 +25,7 @@ def test_end_to_end_checkout_flow(login_fixture):
 
     try:
         # Step 1: Add product to cart and validate cart count update
-        add_cart_page = AddToCartPage(driver)
+        add_cart_page = AddToCartPage(login_fixture)
         cart_product_info = add_cart_page.add_to_cart()
         
         # Assert: Cart count should be at least 1 after adding item
@@ -34,7 +34,7 @@ def test_end_to_end_checkout_flow(login_fixture):
         logger.info(f"Product added to cart successfully | Name: {cart_product_info['original_name']} | Price: {cart_product_info['original_price']}")
 
         # Step 2: Execute checkout process (fill shipping info + submit)
-        checkout_page = CheckoutPage(driver)
+        checkout_page = CheckoutPage(login_fixture)
         order_product_info = checkout_page.checkout()
         
         # Step 3: Verify product name consistency (cart vs order review)
@@ -51,10 +51,10 @@ def test_end_to_end_checkout_flow(login_fixture):
         # Handle assertion failures separately (clearer error logging)
         logger.error(f"Checkout Flow Assertion Failed: {str(ae)}", exc_info=True)
         # Capture screenshot on assertion failure (for debugging)
-        driver.save_screenshot("checkout_assertion_failure.png")
+        driver.screenshot("checkout_assertion_failure.png")
         raise ae
     except Exception as e:
         # Handle non-assertion errors (e.g., element not found, timeout)
         logger.error(f"Checkout Flow Execution Failed: {str(e)}", exc_info=True)
-        driver.save_screenshot("checkout_execution_failure.png")
+        driver.screenshot("checkout_execution_failure.png")
         raise e
