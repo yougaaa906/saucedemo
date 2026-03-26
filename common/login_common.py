@@ -11,7 +11,7 @@ def login_common(driver, username=USERNAME, password=PASSWORD):
     - Uses default credentials from config (overridable via parameters)
     - Executes complete login flow with element validation
     - Logs success status for audit/debugging
-    :param driver: Selenium WebDriver instance
+    :param driver: Playwright Page instance
     :param username: Optional - custom username (defaults to config.USERNAME)
     :param password: Optional - custom password (defaults to config.PASSWORD)
     """
