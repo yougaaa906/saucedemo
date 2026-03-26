@@ -42,44 +42,18 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
-      # Step 3: Cache Edge browser to avoid reinstallation
-      - name: Cache Edge browser
-        uses: actions/cache@v3
-        with:
-          path: |
-            /usr/bin/microsoft-edge
-            /opt/microsoft/edge
-          key: ${{ runner.os }}-microsoft-edge
-
-      # Step 4: Install Edge browser and required dependencies
-      - name: Install Edge browser and dependencies
-        run: |
-          # Install Edge only if not present in cache
-          if ! command -v microsoft-edge &> /dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y --no-install-recommends \
-              libnss3 libatk-bridge2.0-0 libdrm-dev libxkbcommon-dev \
-              libgbm-dev libasound2t64 libatspi2.0-0 libxshmfence-dev \
-              fonts-liberation libappindicator3-1 xdg-utils
-
-            # Add Microsoft Edge repository
-            curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-            sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
-            sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
-            rm microsoft.gpg
-            sudo apt-get update
-            sudo apt-get install -y microsoft-edge-stable
-          fi
-          # Verify Edge installation
-          microsoft-edge --version
-
-      # Step 5: Install Python dependencies with Tsinghua mirror for speed
+      # Step 3: Install Python dependencies with Tsinghua mirror for speed
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-      # Step 6: Execute UI automation tests with timeout control
+      # Step 4: Install Playwright browsers (REQUIRED for Playwright)
+      - name: Install Playwright browsers
+        run: |
+          playwright install chromium --with-deps
+
+      # Step 5: Execute UI automation tests with timeout control
       - name: Run tests
         id: run_tests
         timeout-minutes: 10
@@ -93,7 +67,6 @@ jobs:
           cat > allure-results-saucedemo/environment.properties << EOF
           os=${{ runner.os }}
           python_version=$(python --version | awk '{print $2}')
-          edge_version=$(microsoft-edge --version | awk '{print $3}')
           github_run_id=${{ github.run_id }}
           github_branch=${{ github.ref_name }}
           EOF
@@ -108,14 +81,11 @@ jobs:
           # Print debug information for troubleshooting
           echo "=== Python Dependencies Version ==="
           pip list
-          echo "=== Edge Browser Version ==="
-          microsoft-edge --version
           echo "=== Pytest Exit Code ==="
           echo $TEST_EXIT_CODE
           echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
-      
 
-      # Step 7: Upload Allure raw results as artifact (7 days retention)
+      # Step 6: Upload Allure raw results as artifact (7 days retention)
       - name: Upload Allure results
         uses: actions/upload-artifact@v4
         with:
@@ -123,7 +93,7 @@ jobs:
           path: allure-results-saucedemo/
           retention-days: 7
 
-      # Step 8: Upload test logs for debugging
+      # Step 7: Upload test logs for debugging
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
@@ -131,7 +101,7 @@ jobs:
           path: logs-saucedemo/
           retention-days: 7
 
-      # Step 9: Upload test screenshots for failure analysis
+      # Step 8: Upload test screenshots for failure analysis
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
         with:
@@ -139,7 +109,7 @@ jobs:
           path: screenshots-saucedemo/
           retention-days: 7
 
-      # Step 10: Cache Allure CLI to avoid repeated downloads
+      # Step 9: Cache Allure CLI to avoid repeated downloads
       - name: Cache Allure binary
         uses: actions/cache@v3
         with:
@@ -148,7 +118,7 @@ jobs:
             allure-2.24.1.zip
           key: ${{ runner.os }}-allure-2.24.1
 
-      # Step 11: Install Java (required for Allure) and generate HTML report
+      # Step 10: Install Java (required for Allure) and generate HTML report
       - name: Install Java + Generate Allure report
         if: always()
         timeout-minutes: 5
@@ -175,18 +145,18 @@ jobs:
           # Generate Allure HTML report (clean option overwrites existing report to avoid conflicts)
           allure generate allure-results-saucedemo --clean -o allure-report-saucedemo
 
-      # Step 12: Deploy Allure report to GitHub Pages (dedicated branch)
+      # Step 11: Deploy Allure report to GitHub Pages (dedicated branch)
       - name: Deploy to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report-saucedemo
-          publish_branch: gh-pages-saucedemo # Isolated branch for saucedemo report
-          force_orphan: true # Clear old files before deployment
-          enable_jekyll: false # Disable Jekyll to prevent HTML parsing issues
+          publish_branch: gh-pages-saucedemo
+          force_orphan: true
+          enable_jekyll: false
 
-      # Step 13: Print report URL for quick access
+      # Step 12: Print report URL for quick access
       - name: Print report URL
         if: always()
         run: |
