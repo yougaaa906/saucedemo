@@ -1,0 +1,11 @@
+2026-03-26 09:12:09,148 - INFO - Navigated to saucedemo login page
+2026-03-26 09:12:09,331 - INFO - Login successful with username: standard_user
+2026-03-26 09:12:09,332 - INFO - Universal login flow completed successfully
+2026-03-26 09:12:09,335 - INFO - Login fixture executed successfully
+2026-03-26 09:12:09,339 - INFO - 
+======= Starting End-to-End Checkout Flow Test ======
+2026-03-26 09:12:09,436 - INFO - Add to cart operation completed successfully
+2026-03-26 09:12:09,436 - INFO - Product added to cart successfully | Name: Sauce Labs Backpack | Price: $29.99
+2026-03-26 09:12:09,631 - INFO - Checkout flow completed successfully with postal code: 3
+2026-03-26 09:12:09,632 - INFO - End-to-End Checkout Flow Test Completed Successfully
+2026-03-26 09:12:09,632 - INFO - Test test_end_to_end_checkout_flow passed
