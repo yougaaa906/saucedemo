@@ -1,6 +1,5 @@
 # common/clearcart.py
 from pages.base_page import BasePage
-from selenium.webdriver.common.by import By
 import logging
 
 # Initialize logger for clearcart module
@@ -14,10 +13,10 @@ def clearcart(driver):
     - Log exceptions and re-raise for troubleshooting
     """
     # Locators (generalized to match all remove buttons)
-    shopping_cart_btn = (By.CLASS_NAME, 'shopping_cart_link')
-    remove_btns_locator = (By.XPATH, "//button[contains(@id, 'remove-')]")
-    menu_btn = (By.ID, "react-burger-menu-btn")
-    all_items_btn = (By.ID, "inventory_sidebar_link")
+    shopping_cart_btn = '.shopping_cart_link'
+    remove_btns_locator = "//button[contains(@id, 'remove-')]"
+    menu_btn = "#react-burger-menu-btn"
+    all_items_btn = "#inventory_sidebar_link"
 
     # Initialize BasePage (driver is required parameter)
     base_page = BasePage(driver)
@@ -40,7 +39,7 @@ def clearcart(driver):
 
         # Step 4: Remove all items one by one (core logic)
         for btn in remove_btns:
-            btn.click()
+            base_page.elem_click(btn)
             logger.info("Successfully removed one cart item")
 
         logger.info("All items in shopping cart have been cleared")
