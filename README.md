@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A robust, maintainable UI automation framework built with Selenium WebDriver and Pytest, designed to test the core functionalities of the Saucedemo E-commerce Platform. This framework follows the Page Object Model (POM) design pattern, integrates Allure for comprehensive test reporting, and leverages GitHub Actions for continuous integration/continuous deployment (CI/CD) to ensure test reliability and efficiency.
+A robust, maintainable UI automation framework built with Playwright and Pytest, designed to test the core functionalities of the Saucedemo E-commerce Platform. This framework follows the Page Object Model (POM) design pattern, integrates Allure for comprehensive test reporting, and leverages GitHub Actions for continuous integration/continuous deployment (CI/CD) to ensure test reliability and efficiency.
 
 The framework focuses on end-to-end (E2E) testing of critical user flows, with a focus on reusability, scalability, and ease of debugging—aligned with industry best practices for QA automation in enterprise environments.
 
@@ -11,7 +11,7 @@ The framework focuses on end-to-end (E2E) testing of critical user flows, with a
 ### Core Technologies
 
 - Programming Language: Python 3.9
-- Automation Tool: Selenium WebDriver 4.15.2
+- Automation Tool: Playwright
 - Testing Framework: Pytest 7.4.0 (with plugins for reporting/ordering)
 - Reporting Tool: Allure 2.24.1 (via allure-pytest 2.9.45)
 - CI/CD Integration: GitHub Actions
@@ -21,10 +21,8 @@ The framework focuses on end-to-end (E2E) testing of critical user flows, with a
 
 pytest==7.4.0
 allure-pytest==2.9.45
-selenium==4.15.2
-webdriver-manager==4.0.2
-pytest-html==3.1.1
-pytest-ordering==0.6
+playwright==1.40.0
+pytest-playwright==0.4.3
 python-dotenv==1.2.1
 requests==2.26.0
 ddt==1.7.2
@@ -58,7 +56,7 @@ ui-automation-saucedemo/
 
 ### Key Module Explanations
 
-- pages/base_page.py: Encapsulates common Selenium operations (wait, click, input, screenshot, etc.) to reduce code duplication.
+- pages/base_page.py: Encapsulates common Playwright operations (wait, click, input, screenshot, etc.) to reduce code duplication.
 - pages/*_page.py: Page-specific classes (e.g., LoginPage, AddToCartPage) that inherit from BasePage and encapsulate page elements/actions.
 - common/: Utility functions (e.g., clearcart.py) for cross-page reusable logic.
 - tests/: E2E test cases that reuse page objects and fixtures (e.g., login fixture) for clean, maintainable test logic.
@@ -78,7 +76,8 @@ ui-automation-saucedemo/
 1. Install Python 3.9+.
 2. Clone the repository: git clone <repository-url>
 3. Install dependencies: pip install -r requirements.txt
-4. Configure environment variables (optional): Update config/config.py with valid Saucedemo credentials.
+4. Install Playwright browsers: playwright install
+5. Configure environment variables (optional): Update config/config.py with valid Saucedemo credentials.
 
 ### Run Tests Locally
 
@@ -102,7 +101,7 @@ Tests are automatically triggered on:
 
 1. Checkout repository code.
 2. Set up Python 3.9 and install dependencies.
-3. Install Microsoft Edge browser (for UI testing).
+3. Install Playwright and its built-in browser.
 4. Run E2E tests (with timeout control and error handling).
 5. Upload test artifacts (logs, screenshots, Allure results).
 6. Generate Allure HTML report and deploy to GitHub Pages for easy access.
@@ -124,7 +123,7 @@ Tests are automatically triggered on:
 ## Troubleshooting
 
 - Test Failures: Check screenshots/ for auto-generated failure screenshots and logs for detailed error messages.
-- Browser Compatibility: The framework uses Microsoft Edge (configured in GitHub Actions) – update the browser setup in main.yml for other browsers.
+- Browser Issues: Run playwright install to automatically install supported browsers.
 - Dependency Conflicts: Use the provided requirements.txt to ensure consistent dependency versions.
 - Allure Report Access: After CI/CD execution, the report is available at https://<username>.github.io/<repository-name>/.
 
