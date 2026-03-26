@@ -26,5 +26,5 @@ class LoginPage(BasePage):
             return self.page.text_content(self.homepage_title).strip()
 
         except Exception as e:
-            self.logger.error(f"Login failed for username: {username}. Error: {str(e)}"
+            self.logger.error(f"Login failed for username: {username}. Error: {str(e)}")
             raise e
